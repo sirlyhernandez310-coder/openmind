@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OpenMind API</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #161C3A; --navy-2: #222A52; --lavender: #B9A6F2; --lilac: #E6DDFB;
+      --violet: #7B61E0; --mint: #7FD1B9; --peach: #F5B39A; --sky: #8EC5F2;
+      --text: #F4F1FB; --muted: #A8ADCB;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; font-family: "DM Sans", system-ui, sans-serif;
+      background: radial-gradient(1200px 600px at 85% -10%, #3A2F7A 0%, transparent 60%), var(--navy);
+      color: var(--text);
+    }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 48px 20px 64px; }
+    header { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+    .blob { width: 120px; height: 120px; flex: none; animation: float 6s ease-in-out infinite; }
+    @keyframes float { 50% { transform: translateY(-10px) rotate(3deg); } }
+    h1 { font-family: "DM Serif Display", serif; font-weight: 400; font-size: clamp(2.4rem, 6vw, 3.6rem); margin: 0; line-height: 1; }
+    .tag { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: rgba(127, 209, 185, .15); color: var(--mint); font-size: .85rem; margin-bottom: 12px; }
+    .tag::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 0 4px rgba(127,209,185,.25); }
+    p.lead { color: var(--muted); max-width: 560px; line-height: 1.6; margin: 12px 0 0; }
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin: 32px 0 40px; }
+    .btn { display: inline-block; padding: 12px 22px; border-radius: 999px; text-decoration: none; font-weight: 700; font-size: .95rem; }
+    .btn.primary { background: var(--lavender); color: var(--navy); }
+    .btn.ghost { border: 1px solid rgba(185,166,242,.4); color: var(--lilac); }
+    .btn:hover { filter: brightness(1.08); }
+    h2 { font-family: "DM Serif Display", serif; font-weight: 400; font-size: 1.6rem; margin: 0 0 6px; }
+    .group { background: var(--navy-2); border-radius: 24px; padding: 24px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,.06); }
+    .group small { color: var(--muted); }
+    ul { list-style: none; padding: 0; margin: 16px 0 0; }
+    li { display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid rgba(255,255,255,.06); }
+    li:first-child { border-top: 0; }
+    .m { font-size: .72rem; font-weight: 700; text-align: center; padding: 5px 0; border-radius: 8px; letter-spacing: .04em; }
+    .post { background: rgba(185,166,242,.18); color: var(--lavender); }
+    .get { background: rgba(127,209,185,.16); color: var(--mint); }
+    code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: .9rem; color: var(--text); }
+    .desc { display: block; color: var(--muted); font-size: .85rem; margin-top: 2px; }
+    .lock { color: var(--peach); font-size: .75rem; margin-left: 6px; }
+    footer { color: var(--muted); font-size: .85rem; margin-top: 32px; }
+    @media (max-width: 520px) { li { grid-template-columns: 52px 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <svg class="blob" viewBox="0 0 120 120" aria-hidden="true">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#E6DDFB"/><stop offset="1" stop-color="#9B85EC"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#g)" d="M61 8c18 0 35 9 43 25s7 36-3 51-27 28-45 28S21 103 13 88 4 54 12 37 41 8 61 8z"/>
+        <circle cx="47" cy="56" r="5" fill="#161C3A"/><circle cx="75" cy="56" r="5" fill="#161C3A"/>
+        <path d="M50 74c7 7 16 7 22 0" stroke="#161C3A" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <circle cx="38" cy="68" r="5" fill="#F5B39A" opacity=".6"/><circle cx="84" cy="68" r="5" fill="#F5B39A" opacity=".6"/>
+      </svg>
+      <div>
+        <span class="tag">API en línea · v3.0 · Sprints 1, 2 y 3</span>
+        <h1>OpenMind API</h1>
+        <p class="lead">Backend REST de la plataforma de psicología y gestión emocional. Autenticación con JWT, roles de paciente, psicólogo y administrador, evaluación emocional, historial y chat de emergencia.</p>
+      </div>
+    </header>
+
+    <div class="actions">
+      <a class="btn primary" href="/api/docs/">Abrir documentación Swagger</a>
+      <a class="btn ghost" href="/api/redoc/">Ver ReDoc</a>
+      <a class="btn ghost" href="/admin/">Panel de administración</a>
+    </div>
+
+    <section class="group">
+      <h2>Autenticación</h2>
+      <small>Historias OM3-9 Registro de usuario · OM3-10 Inicio de sesión</small>
+      <ul>
+        <li><span class="m post">POST</span><div><code>/api/auth/register/</code><span class="desc">Crea una cuenta de paciente y devuelve la sesión</span></div></li>
+        <li><span class="m post">POST</span><div><code>/api/auth/login/</code><span class="desc">Valida correo y contraseña; responde tokens y rol</span></div></li>
+        <li><span class="m post">POST</span><div><code>/api/auth/refresh/</code><span class="desc">Renueva el token de acceso</span></div></li>
+        <li><span class="m get">GET</span><div><code>/api/auth/me/</code><span class="lock">🔒 JWT</span><span class="desc">Perfil del usuario autenticado</span></div></li>
+        <li><span class="m post">POST</span><div><code>/api/auth/logout/</code><span class="lock">🔒 JWT</span><span class="desc">Cierra sesión e invalida el refresh token</span></div></li>
+        <li><span class="m get">GET</span><div><code>/api/auth/users/</code><span class="lock">🔒 Administrador</span><span class="desc">Lista de usuarios (filtro opcional ?role=)</span></div></li>
+      </ul>
+    </section>
+
+    <section class="group">
+      <h2>Recuperación de contraseña</h2>
+      <small>Historia OM3-11</small>
+      <ul>
+        <li><span class="m post">POST</span><div><code>/api/auth/password-reset/</code><span class="desc">Verifica el correo y envía las instrucciones</span></div></li>
+        <li><span class="m post">POST</span><div><code>/api/auth/password-reset/validate/</code><span class="desc">Comprueba que el enlace siga vigente</span></div></li>
+        <li><span class="m post">POST</span><div><code>/api/auth/password-reset/confirm/</code><span class="desc">Guarda la nueva contraseña</span></div></li>
+      </ul>
+    </section>
+
+    <section class="group">
+      <h2>Evaluación emocional</h2>
+      <small>Historias OM3-12 Realizar evaluación · OM3-13 Consultar historial</small>
+      <ul>
+        <li><span class="m get">GET</span><div><code>/api/evaluations/questions/</code><span class="lock">🔒 Paciente</span><span class="desc">Inicia la evaluación: preguntas y escala</span></div></li>
+        <li><span class="m post">POST</span><div><code>/api/evaluations/</code><span class="lock">🔒 Paciente</span><span class="desc">Envía las respuestas y devuelve el resultado procesado</span></div></li>
+        <li><span class="m get">GET</span><div><code>/api/evaluations/</code><span class="lock">🔒 Paciente</span><span class="desc">Historial de evaluaciones con fecha</span></div></li>
+        <li><span class="m get">GET</span><div><code>/api/evaluations/{id}/</code><span class="lock">🔒 Dueño</span><span class="desc">Resultado detallado de una evaluación</span></div></li>
+      </ul>
+    </section>
+
+    <section class="group">
+      <h2>Registro profesional</h2>
+      <small>Historia OM3-21</small>
+      <ul>
+        <li><span class="m post">POST</span><div><code>/api/professionals/register/</code><span class="desc">Registro de psicólogo con especialidad, experiencia, licencia y descripción</span></div></li>
+        <li><span class="m get">GET</span><div><code>/api/professionals/specialties/</code><span class="desc">Especialidades disponibles</span></div></li>
+        <li><span class="m get">GET</span><div><code>/api/professionals/me/</code><span class="lock">🔒 Psicólogo</span><span class="desc">Ver y editar (PATCH) el perfil profesional</span></div></li>
+        <li><span class="m get">GET</span><div><code>/api/professionals/</code><span class="lock">🔒 Administrador</span><span class="desc">Lista de profesionales (?verified=)</span></div></li>
+        <li><span class="m post">POST</span><div><code>/api/professionals/{id}/verify/</code><span class="lock">🔒 Administrador</span><span class="desc">Verificar tarjeta profesional</span></div></li>
+      </ul>
+    </section>
+
+    <section class="group">
+      <h2>Chat de emergencia</h2>
+      <small>Historia OM3-19</small>
+      <ul>
+        <li><span class="m get">GET</span><div><code>/api/emergency/info/</code><span class="desc">Información del servicio y líneas de atención</span></div></li>
+        <li><span class="m post">POST</span><div><code>/api/emergency/chats/</code><span class="lock">🔒 Paciente</span><span class="desc">Inicia (o retoma) un chat de emergencia</span></div></li>
+        <li><span class="m get">GET</span><div><code>/api/emergency/chats/</code><span class="lock">🔒 Paciente / Psicólogo verificado</span><span class="desc">Mis chats o fila de atención</span></div></li>
+        <li><span class="m post">POST</span><div><code>/api/emergency/chats/{id}/take/</code><span class="lock">🔒 Psicólogo verificado</span><span class="desc">Atender un chat en espera</span></div></li>
+        <li><span class="m get">GET</span><div><code>/api/emergency/chats/{id}/messages/</code><span class="lock">🔒 Participantes</span><span class="desc">Ver (GET, ?after=) y enviar (POST) mensajes</span></div></li>
+        <li><span class="m post">POST</span><div><code>/api/emergency/chats/{id}/close/</code><span class="lock">🔒 Participantes</span><span class="desc">Finalizar la conversación</span></div></li>
+      </ul>
+    </section>
+
+    <section class="group">
+      <h2>Citas con psicólogos</h2>
+      <small>Historias OM3-14, OM3-15, OM3-16, OM3-17 y OM3-18</small>
+      <ul>
+        <li><span class="m get">GET</span><div><code>/api/professionals/directory/</code><span class="lock">🔒 JWT</span><span class="desc">Buscar psicólogos verificados (?q= nombre o especialidad)</span></div></li>
+        <li><span class="m get">GET</span><div><code>/api/professionals/directory/{id}/</code><span class="lock">🔒 JWT</span><span class="desc">Perfil del psicólogo: especialidad, experiencia y próximo horario</span></div></li>
+        <li><span class="m get">GET</span><div><code>/api/appointments/psychologists/{id}/slots/</code><span class="lock">🔒 JWT</span><span class="desc">Horarios disponibles agrupados por día</span></div></li>
+        <li><span class="m post">POST</span><div><code>/api/appointments/</code><span class="lock">🔒 Paciente</span><span class="desc">Reservar una cita en un horario libre</span></div></li>
+        <li><span class="m get">GET</span><div><code>/api/appointments/</code><span class="lock">🔒 Paciente / Psicólogo</span><span class="desc">Mis sesiones (?scope=upcoming|past|all)</span></div></li>
+        <li><span class="m get">GET</span><div><code>/api/appointments/availability/</code><span class="lock">🔒 Psicólogo</span><span class="desc">Ver y reemplazar (PUT) el horario semanal de atención</span></div></li>
+      </ul>
+    </section>
+
+    <footer>OpenMind · Ingeniería de Software II · I.U. Pascual Bravo</footer>
+  </div>
+</body>
+</html>

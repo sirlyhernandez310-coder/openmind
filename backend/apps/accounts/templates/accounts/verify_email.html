@@ -1,0 +1,4 @@
+{% extends "accounts/email_base.html" %}
+{% block intro %}¡Gracias por registrarte en OpenMind! Para activar tu cuenta confirma que este correo es tuyo. El enlace vence en <strong>{{ hours }} horas</strong>.{% endblock %}
+{% block button %}Confirmar mi correo{% endblock %}
+{% block outro %}Si tú no creaste esta cuenta, ignora este correo y no se activará.{% endblock %}

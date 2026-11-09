@@ -1,0 +1,47 @@
+# OpenMind completo con un solo comando:   docker compose up --build
+#   Página:   http://localhost:5173
+#   API:      http://localhost:8000/api/docs/
+#   Base de datos PostgreSQL en un contenedor (los datos se guardan en el volumen "pgdata")
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: openmind
+      POSTGRES_USER: openmind
+      POSTGRES_PASSWORD: openmind
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openmind -d openmind"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgres://openmind:openmind@db:5432/openmind
+      DJANGO_SECRET_KEY: solo-para-docker-local-cambiar-en-produccion
+      DJANGO_DEBUG: "False"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,backend
+      CORS_ALLOWED_ORIGINS: http://localhost:5173
+      FRONTEND_URL: http://localhost:5173
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8000/api
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

@@ -1,0 +1,9 @@
+{% autoescape off %}Hola {{ user.first_name }},
+
+¡Gracias por registrarte en OpenMind! Para activar tu cuenta confirma tu correo abriendo este enlace (vence en {{ hours }} horas):
+{{ link }}
+
+Si tú no creaste esta cuenta, ignora este correo y no se activará.
+
+— Equipo OpenMind
+{% endautoescape %}
