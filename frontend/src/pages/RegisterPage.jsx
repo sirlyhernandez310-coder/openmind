@@ -62,7 +62,7 @@ export default function RegisterPage() {
       if (!payload.birth_date) payload.birth_date = null
       const data = await register(payload)
       // la cuenta queda pendiente hasta que confirme su correo
-      navigate('/verifica-tu-correo', { replace: true, state: { email: data.email } })
+      navigate(data.email_verified ? '/login' : '/verifica-tu-correo', { replace: true, state: { email: data.email, success: data.email_verified ? data.detail : undefined } })
     } catch (error) {
       setErrors(error.fieldErrors ?? {})
       setMessage(error.message.startsWith('Error') ? 'Revisa los campos marcados en rojo.' : error.message)

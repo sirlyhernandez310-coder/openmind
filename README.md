@@ -331,3 +331,15 @@ Página: http://localhost:5173 · API: http://localhost:8000/api/docs/
 
 Ver la sección de despliegue en [backend/README.md](backend/README.md#despliegue-en-render) (API en Render con PostgreSQL)
 y [frontend/README.md](frontend/README.md#despliegue-en-vercel) (frontend en Vercel).
+
+### 🚂 Despliegue en Railway
+
+Un proyecto de Railway con 3 servicios, todos desde este repositorio:
+
+| Servicio | Root Directory | Variables |
+|---|---|---|
+| **Postgres** | (plantilla de base de datos) | — |
+| **backend** | `/backend` | `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=False`, `SEED_DEMO_DATA=true`, `EMAIL_VERIFICATION_REQUIRED=False`, `CORS_ALLOWED_ORIGINS` y `FRONTEND_URL` (URL del frontend) |
+| **frontend** | `/frontend` | `VITE_API_URL=https://<dominio-del-backend>/api` |
+
+`railway.json` en cada carpeta indica que se construye con el `Dockerfile`. `EMAIL_VERIFICATION_REQUIRED=False` activa las cuentas sin correo mientras no haya un servidor de correo real.

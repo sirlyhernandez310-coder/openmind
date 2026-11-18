@@ -52,7 +52,7 @@ export default function ProfessionalRegisterPage() {
     setSubmitting(true)
     try {
       const data = await professionalsApi.register({ ...form, email: form.email.trim(), years_experience: Number(form.years_experience) })
-      navigate('/verifica-tu-correo', { replace: true, state: { email: data.email } })
+      navigate(data.email_verified ? '/login' : '/verifica-tu-correo', { replace: true, state: { email: data.email, success: data.email_verified ? data.detail : undefined } })
     } catch (err) {
       setErrors(err.fieldErrors ?? {})
       setMessage(err.message.startsWith('Error') ? 'Revisa los campos marcados en rojo.' : err.message)

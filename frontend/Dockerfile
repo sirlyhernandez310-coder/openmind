@@ -25,7 +25,10 @@ RUN npm run build
 # =========================
 FROM nginx:1.27-alpine AS production
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# La imagen de Nginx reemplaza ${PORT} en esta plantilla al arrancar
+# (Railway asigna el puerto en la variable PORT; en Docker local se usa 80)
+ENV PORT=80
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 EXPOSE 80

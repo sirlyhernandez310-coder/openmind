@@ -29,6 +29,11 @@ DEBUG = env_bool("DJANGO_DEBUG", True)
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", "")
 
+# Railway entrega el dominio público de cada servicio en RAILWAY_PUBLIC_DOMAIN
+if os.getenv("RAILWAY_PUBLIC_DOMAIN"):
+    ALLOWED_HOSTS += [os.environ["RAILWAY_PUBLIC_DOMAIN"], "healthcheck.railway.app"]
+    CSRF_TRUSTED_ORIGINS.append(f"https://{os.environ['RAILWAY_PUBLIC_DOMAIN']}")
+
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -145,6 +150,10 @@ BREVO_API_KEY = os.getenv("BREVO_API_KEY", "")
 APPOINTMENT_MINUTES = int(os.getenv("APPOINTMENT_MINUTES", "60"))  # duración de cada sesión
 APPOINTMENT_DAYS_AHEAD = int(os.getenv("APPOINTMENT_DAYS_AHEAD", "14"))  # cuántos días hacia adelante se puede reservar
 APPOINTMENT_MIN_NOTICE_MINUTES = int(os.getenv("APPOINTMENT_MIN_NOTICE_MINUTES", "60"))  # anticipación mínima
+
+# Verificación de correo al registrarse. En un despliegue sin servidor de correo real
+# se puede poner EMAIL_VERIFICATION_REQUIRED=False: la cuenta queda activa de inmediato.
+EMAIL_VERIFICATION_REQUIRED = env_bool("EMAIL_VERIFICATION_REQUIRED", True)
 
 # El enlace para verificar el correo vence en 24 horas
 EMAIL_VERIFICATION_HOURS = int(os.getenv("EMAIL_VERIFICATION_HOURS", "24"))
