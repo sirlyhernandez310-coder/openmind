@@ -1,5 +1,6 @@
 import logging
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.http import Http404, HttpResponse
@@ -38,7 +39,8 @@ SessionSerializer = inline_serializer(
     {"access": serializers.CharField(), "refresh": serializers.CharField(), "user": UserSerializer()},
 )
 RegisteredSerializer = inline_serializer(
-    "RegistroPendiente", {"detail": serializers.CharField(), "email": serializers.EmailField()}
+    "RegistroPendiente",
+    {"detail": serializers.CharField(), "email": serializers.EmailField(), "email_verified": serializers.BooleanField()},
 )
 EMAIL_FAILED_MSG = "No pudimos enviar el correo en este momento. Intenta de nuevo más tarde."
 
@@ -53,6 +55,13 @@ def register_and_send_verification(serializer):
     Crea la cuenta y envía el correo de verificación en una sola transacción:
     si el correo no se puede enviar, la cuenta no queda creada.
     """
+    if not settings.EMAIL_VERIFICATION_REQUIRED:
+        # sin servidor de correo (por ejemplo en el despliegue de prueba) la cuenta queda activa de inmediato
+        user = serializer.save(email_verified=True)
+        return Response(
+            {"detail": "¡Tu cuenta quedó lista! Ya puedes iniciar sesión.", "email": user.email, "email_verified": True},
+            status=status.HTTP_201_CREATED,
+        )
     try:
         with transaction.atomic():
             user = serializer.save()
@@ -64,6 +73,7 @@ def register_and_send_verification(serializer):
         {
             "detail": f"Te enviamos un enlace a {user.email} para confirmar tu correo y activar tu cuenta.",
             "email": user.email,
+            "email_verified": False,
         },
         status=status.HTTP_201_CREATED,
     )
