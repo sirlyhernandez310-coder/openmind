@@ -41,5 +41,6 @@ USER openmind
 
 EXPOSE 8000
 
-# Aplica migraciones y enciende el servidor de producción (gunicorn)
-CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2"]
+# Al encender: aplica migraciones, crea los usuarios de prueba si SEED_DEMO_DATA=true
+# y arranca el servidor de producción (gunicorn) en el puerto que entregue la nube
+CMD ["sh", "-c", "python manage.py migrate --noinput && if [ \"$SEED_DEMO_DATA\" = \"true\" ]; then python manage.py seed_users; fi && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2"]

@@ -9,6 +9,7 @@ import re
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.core.cache import cache
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -497,3 +498,18 @@ class SeedCommandTests(BaseTestCase):
         psychologist = User.objects.get(email="psicologo@openmind.com")
         self.assertTrue(psychologist.psychologist_profile.is_verified)
         self.assertEqual(User.objects.get(email="paciente@openmind.com").evaluations.count(), 4)
+
+
+class RegistroSinVerificacionTests(APITestCase):
+    """Despliegue sin servidor de correo: EMAIL_VERIFICATION_REQUIRED=False."""
+
+    @override_settings(EMAIL_VERIFICATION_REQUIRED=False)
+    def test_la_cuenta_queda_activa_y_puede_iniciar_sesion(self):
+        data = {"email": "nuevo@x.com", "first_name": "Nueva", "last_name": "Persona",
+                "password": "ClaveSegura#2026", "password_confirm": "ClaveSegura#2026"}
+        response = self.client.post(reverse("accounts:register"), data, format="json")
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(response.data["email_verified"])
+        self.assertEqual(len(mail.outbox), 0)
+        login = self.client.post(reverse("accounts:login"), {"email": "nuevo@x.com", "password": "ClaveSegura#2026"}, format="json")
+        self.assertEqual(login.status_code, 200)
