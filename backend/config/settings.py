@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "apps.professionals",
     "apps.emergency",
     "apps.appointments",
+    "apps.administration",
 ]
 
 MIDDLEWARE = [
@@ -155,6 +156,14 @@ APPOINTMENT_MIN_NOTICE_MINUTES = int(os.getenv("APPOINTMENT_MIN_NOTICE_MINUTES",
 # se puede poner EMAIL_VERIFICATION_REQUIRED=False: la cuenta queda activa de inmediato.
 EMAIL_VERIFICATION_REQUIRED = env_bool("EMAIL_VERIFICATION_REQUIRED", True)
 
+# Videollamada (Sprint 4): se puede entrar desde X minutos antes del inicio hasta que termina la sesión
+VIDEOCALL_EARLY_MINUTES = int(os.getenv("VIDEOCALL_EARLY_MINUTES", "15"))
+# Servidores para conectar audio y video entre redes (STUN público; TURN opcional)
+VIDEOCALL_STUN_URLS = env_list("VIDEOCALL_STUN_URLS", "stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302")
+VIDEOCALL_TURN_URLS = env_list("VIDEOCALL_TURN_URLS", "")
+VIDEOCALL_TURN_USERNAME = os.getenv("VIDEOCALL_TURN_USERNAME", "")
+VIDEOCALL_TURN_CREDENTIAL = os.getenv("VIDEOCALL_TURN_CREDENTIAL", "")
+
 # El enlace para verificar el correo vence en 24 horas
 EMAIL_VERIFICATION_HOURS = int(os.getenv("EMAIL_VERIFICATION_HOURS", "24"))
 
@@ -184,6 +193,8 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.getenv("JWT_REFRESH_DAYS", "1"))),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
+    # guarda la fecha del último inicio de sesión (la ve el administrador)
+    "UPDATE_LAST_LOGIN": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
@@ -196,10 +207,12 @@ SPECTACULAR_SETTINGS = {
         "**Sprint 2 · Bienestar emocional:** evaluación emocional, historial, registro profesional "
         "de psicólogos y chat de emergencia.\n\n"
         "**Sprint 3 · Citas:** búsqueda de psicólogos, perfil, horarios disponibles, reserva y mis sesiones.\n\n"
+        "**Sprint 4 · Gestión y seguridad:** videollamada, perfil profesional, gestión de usuarios, "
+        "estadísticas y protección de datos (Ley 1581 de 2012).\n\n"
         "Para probar endpoints protegidos: haz login, copia el `access` y pulsa **Authorize** "
         "(se envía como `Bearer <token>`)."
     ),
-    "VERSION": "3.0.0",
+    "VERSION": "4.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
     "SWAGGER_UI_SETTINGS": {
@@ -217,10 +230,18 @@ SPECTACULAR_SETTINGS = {
         {"name": "Registro profesional", "description": "Registro y perfil de psicólogos, verificación"},
         {"name": "Citas", "description": "Horarios disponibles, reservas y mis sesiones"},
         {"name": "Chat de emergencia", "description": "Fila de atención y mensajes paciente ↔ psicólogo"},
+        {"name": "Videollamada", "description": "Conexión de audio y video de una sesión programada"},
+        {"name": "Administración", "description": "Gestión de usuarios y registro de acciones (administrador)"},
+        {"name": "Estadísticas", "description": "Indicadores generales de la plataforma (administrador)"},
     ],
 }
 
 # Seguridad extra en producción
+# Encabezados de protección (OM3-26)
+X_FRAME_OPTIONS = "DENY"
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
+
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SESSION_COOKIE_SECURE = True

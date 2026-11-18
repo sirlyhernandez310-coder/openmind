@@ -9,7 +9,13 @@ from apps.accounts.permissions import role_permission
 from apps.accounts.views import register_and_send_verification
 
 from .models import PsychologistProfile, Specialty
-from .serializers import DirectorySerializer, ProfessionalRegisterSerializer, ProfileSerializer, VerifySerializer
+from .serializers import (
+    DirectorySerializer,
+    MyProfileSerializer,
+    ProfessionalRegisterSerializer,
+    ProfileSerializer,
+    VerifySerializer,
+)
 
 User = get_user_model()
 
@@ -44,9 +50,9 @@ class SpecialtyListView(APIView):
 
 @extend_schema(tags=["Registro profesional"])
 class MyProfileView(generics.RetrieveUpdateAPIView):
-    """El psicólogo consulta y actualiza su perfil profesional."""
+    """OM3-22: el psicólogo consulta y actualiza su perfil profesional."""
 
-    serializer_class = ProfileSerializer
+    serializer_class = MyProfileSerializer
     permission_classes = (role_permission(User.Role.PSICOLOGO),)
     http_method_names = ("get", "patch")
 
@@ -92,7 +98,16 @@ class VerifyProfessionalView(APIView):
         profile = generics.get_object_or_404(PsychologistProfile, pk=pk)
         serializer = VerifySerializer(profile, data=request.data)
         serializer.is_valid(raise_exception=True)
+        was_verified = profile.is_verified
         serializer.save()
+        if profile.is_verified != was_verified:
+            from apps.administration.models import AdminActionLog, log_action
+
+            action = (
+                AdminActionLog.Action.PROFESSIONAL_VERIFIED if profile.is_verified
+                else AdminActionLog.Action.PROFESSIONAL_UNVERIFIED
+            )
+            log_action(request.user, action, profile.user)
         return Response(ProfileSerializer(profile).data)
 
 

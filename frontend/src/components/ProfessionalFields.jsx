@@ -2,7 +2,7 @@ import { useId } from 'react'
 import FormField from './FormField'
 
 // Campos profesionales compartidos entre el registro y la edición del perfil
-export default function ProfessionalFields({ form, errors, specialties, onChange }) {
+export default function ProfessionalFields({ form, errors, specialties, onChange, licenseLocked = false }) {
   const selectId = useId()
   const descId = useId()
   const expId = useId()
@@ -21,8 +21,10 @@ export default function ProfessionalFields({ form, errors, specialties, onChange
         <FormField label="Años de experiencia" name="years_experience" type="number" min="0" max="60" inputMode="numeric"
           value={form.years_experience} onChange={onChange} error={errors.years_experience} />
         <FormField label="Tarjeta profesional" name="license_number" placeholder="Ej: TP-123456" autoComplete="off"
-          value={form.license_number} onChange={onChange} error={errors.license_number}
-          hint={errors.license_number ? undefined : 'Número de tu tarjeta profesional de psicólogo.'} />
+          value={form.license_number} onChange={onChange} error={errors.license_number} readOnly={licenseLocked}
+          hint={errors.license_number ? undefined : licenseLocked
+            ? 'No se puede cambiar: el administrador ya la verificó.'
+            : 'Número de tu tarjeta profesional de psicólogo.'} />
       </div>
 
       <FormField label="Universidad" name="university" optional value={form.university} onChange={onChange} error={errors.university} />

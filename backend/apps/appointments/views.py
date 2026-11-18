@@ -12,8 +12,11 @@ from rest_framework.views import APIView
 
 from apps.accounts.permissions import role_permission
 
-from .models import Appointment, Availability
+from .call import ice_servers, join_problem, call_window
+from .models import Appointment, Availability, CallRoom
 from .serializers import (
+    CallSignalSerializer,
+    CallStateSerializer,
     AppointmentCreateSerializer,
     AppointmentSerializer,
     AvailabilityListSerializer,
@@ -146,3 +149,91 @@ class MyAvailabilityView(APIView):
                 Availability(psychologist=request.user, **item) for item in serializer.validated_data["items"]
             )
         return Response(AvailabilitySerializer(request.user.availabilities.all(), many=True).data)
+
+
+# ------------------------------------------------------------------ OM3-20 Videollamada
+@extend_schema(tags=["Videollamada"])
+class CallView(APIView):
+    """
+    GET: estado de la videollamada de una sesión (CA1 acceso desde la sesión, CA4 asociada a la cita).
+    POST: señalización para establecer la conexión (CA2): join, offer (psicólogo), answer (paciente), leave.
+    El audio y el video (CA3) viajan directamente entre los navegadores con WebRTC.
+    """
+
+    permission_classes = (role_permission(User.Role.PACIENTE, User.Role.PSICOLOGO),)
+
+    def get_appointment(self):
+        user = self.request.user
+        mine = Q(patient=user) if user.role == User.Role.PACIENTE else Q(psychologist=user)
+        appointment = Appointment.objects.select_related("patient", "psychologist__psychologist_profile").filter(mine).filter(
+            pk=self.kwargs["pk"]
+        ).first()
+        if not appointment:
+            raise NotFound("No encontramos esta sesión entre las tuyas.")
+        return appointment
+
+    def state(self, appointment, room):
+        opens, closes = call_window(appointment)
+        problem = join_problem(appointment)
+        data = {
+            "appointment": appointment,
+            "role": self.request.user.role,
+            "can_join": problem is None,
+            "reason": problem,
+            "opens_at": opens,
+            "closes_at": closes,
+            "ice_servers": ice_servers() if problem is None else [],
+            "offer": room.offer if room else "",
+            "offer_at": room.offer_at if room else None,
+            "answer": room.answer if room else "",
+            "answer_at": room.answer_at if room else None,
+            "psychologist_joined_at": room.psychologist_joined_at if room else None,
+            "patient_joined_at": room.patient_joined_at if room else None,
+        }
+        return Response(CallStateSerializer(data).data)
+
+    @extend_schema(summary="Estado de la videollamada de una sesión", responses=CallStateSerializer)
+    def get(self, request, pk):
+        appointment = self.get_appointment()
+        return self.state(appointment, CallRoom.objects.filter(appointment=appointment).first())
+
+    @extend_schema(summary="Señalización de la videollamada", request=CallSignalSerializer, responses=CallStateSerializer)
+    def post(self, request, pk):
+        appointment = self.get_appointment()
+        problem = join_problem(appointment)
+        if problem:
+            raise ValidationError({"detail": problem})
+        serializer = CallSignalSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        action, sdp = serializer.validated_data["action"], serializer.validated_data.get("sdp", "")
+        is_psychologist = request.user.role == User.Role.PSICOLOGO
+        now = timezone.now()
+
+        with transaction.atomic():
+            room, _ = CallRoom.objects.select_for_update().get_or_create(appointment=appointment)
+            if action == "join":
+                if is_psychologist:
+                    # el psicólogo inicia una conexión nueva: se descarta la anterior
+                    room.psychologist_joined_at, room.offer, room.offer_at = now, "", None
+                    room.answer, room.answer_at = "", None
+                else:
+                    room.patient_joined_at, room.answer, room.answer_at = now, "", None
+            elif action == "offer":
+                if not is_psychologist:
+                    raise ValidationError({"action": "Solo el psicólogo inicia la conexión."})
+                room.offer, room.offer_at, room.answer, room.answer_at = sdp, now, "", None
+            elif action == "answer":
+                if is_psychologist:
+                    raise ValidationError({"action": "Solo el paciente responde la conexión."})
+                if not room.offer:
+                    raise ValidationError({"action": "Tu psicólogo aún no se ha conectado."})
+                room.answer, room.answer_at = sdp, now
+                room.started_at = room.started_at or now
+            else:  # leave
+                if is_psychologist:
+                    room.psychologist_joined_at, room.offer, room.offer_at = None, "", None
+                else:
+                    room.patient_joined_at = None
+                room.answer, room.answer_at = "", None
+            room.save()
+        return self.state(appointment, room)

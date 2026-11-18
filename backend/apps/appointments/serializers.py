@@ -25,11 +25,20 @@ class AppointmentSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source="get_status_display", read_only=True)
     start = serializers.SerializerMethodField()
     end = serializers.SerializerMethodField()
+    call_opens_at = serializers.SerializerMethodField(help_text="Desde cuándo se puede entrar a la videollamada")
 
     class Meta:
         model = Appointment
-        fields = ("id", "start", "end", "status", "status_display", "reason", "psychologist", "patient", "created_at")
+        fields = (
+            "id", "start", "end", "status", "status_display", "reason", "psychologist", "patient", "created_at",
+            "call_opens_at",
+        )
         read_only_fields = fields
+
+    def get_call_opens_at(self, obj) -> str:
+        from .call import call_window
+
+        return call_window(obj)[0].astimezone(local_tz()).isoformat()
 
     # fechas en hora de Colombia, con su desfase (-05:00)
     def get_start(self, obj) -> str:
@@ -111,3 +120,32 @@ class AvailabilityListSerializer(serializers.Serializer):
                 if next_start < prev_end:
                     raise serializers.ValidationError("Hay franjas que se cruzan en el mismo día.")
         return items
+
+
+# ------------------------------------------------------------------ OM3-20 Videollamada
+class CallSignalSerializer(serializers.Serializer):
+    ACTIONS = ("join", "offer", "answer", "leave")
+    action = serializers.ChoiceField(choices=ACTIONS, error_messages={"invalid_choice": "Acción no válida."})
+    # trim_whitespace=False: la descripción WebRTC (SDP) debe conservar su salto de línea final
+    sdp = serializers.CharField(required=False, allow_blank=True, max_length=20000, trim_whitespace=False)
+
+    def validate(self, attrs):
+        if attrs["action"] in ("offer", "answer") and not attrs.get("sdp"):
+            raise serializers.ValidationError({"sdp": "Falta la descripción de la conexión."})
+        return attrs
+
+
+class CallStateSerializer(serializers.Serializer):
+    appointment = AppointmentSerializer()
+    role = serializers.CharField()
+    can_join = serializers.BooleanField()
+    reason = serializers.CharField(allow_null=True)
+    opens_at = serializers.DateTimeField()
+    closes_at = serializers.DateTimeField()
+    ice_servers = serializers.ListField(child=serializers.DictField())
+    offer = serializers.CharField(allow_blank=True)
+    offer_at = serializers.DateTimeField(allow_null=True)
+    answer = serializers.CharField(allow_blank=True)
+    answer_at = serializers.DateTimeField(allow_null=True)
+    psychologist_joined_at = serializers.DateTimeField(allow_null=True)
+    patient_joined_at = serializers.DateTimeField(allow_null=True)

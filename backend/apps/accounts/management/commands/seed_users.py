@@ -73,6 +73,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"  ✓ {email} (PSICOLOGO de ejemplo)"))
 
         self.seed_schedules()
+        self.seed_appointment(users[User.Role.PACIENTE], users[User.Role.PSICOLOGO])
 
         patient = users[User.Role.PACIENTE]
         if not patient.evaluations.exists():
@@ -99,6 +100,21 @@ class Command(BaseCommand):
                     Availability(psychologist=user, weekday=d, start_time=a, end_time=b) for d, a, b in ranges
                 )
                 self.stdout.write(self.style.SUCCESS(f"  ✓ horario de atención para {email}"))
+
+    def seed_appointment(self, patient, psychologist):
+        """Una sesión de ejemplo con el psicólogo demo, para ver Mis sesiones y la videollamada."""
+        from apps.appointments.models import Appointment
+        from apps.appointments.slots import available_slots, session_length
+
+        if Appointment.objects.filter(patient=patient).exists():
+            return
+        slots = available_slots(psychologist)
+        if slots:
+            Appointment.objects.create(
+                patient=patient, psychologist=psychologist, start=slots[0], end=slots[0] + session_length(),
+                reason="Sesión de ejemplo para conocer la plataforma",
+            )
+            self.stdout.write(self.style.SUCCESS(f"  ✓ sesión de ejemplo para {patient.email}"))
 
     def create_demo_history(self, patient):
         questions = list(Question.objects.filter(is_active=True))
