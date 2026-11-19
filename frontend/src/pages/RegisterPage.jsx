@@ -4,6 +4,7 @@ import Alert from '../components/Alert'
 import AuthLayout from '../components/AuthLayout'
 import FormField from '../components/FormField'
 import PasswordChecklist from '../components/PasswordChecklist'
+import PrivacyConsent, { PRIVACY_REQUIRED } from '../components/PrivacyConsent'
 import { useAuth } from '../context/auth-context'
 import { REQUIRED, compact, validateEmail } from '../validation'
 
@@ -15,6 +16,7 @@ const EMPTY = {
   birth_date: '',
   password: '',
   password_confirm: '',
+  accept_privacy: false,
 }
 
 function validate(form) {
@@ -29,6 +31,7 @@ function validate(form) {
       : form.password_confirm !== form.password
         ? 'Las contraseñas no coinciden.'
         : null,
+    accept_privacy: form.accept_privacy ? null : PRIVACY_REQUIRED,
   })
 }
 
@@ -127,6 +130,11 @@ export default function RegisterPage() {
           value={form.password_confirm}
           onChange={update}
           error={errors.password_confirm}
+        />
+        <PrivacyConsent
+          checked={form.accept_privacy}
+          error={errors.accept_privacy}
+          onChange={(value) => { setForm((f) => ({ ...f, accept_privacy: value })); setErrors((e) => ({ ...e, accept_privacy: undefined })) }}
         />
         <button type="submit" className="btn btn--primary btn--block" disabled={submitting}>
           {submitting ? 'Creando cuenta…' : 'Crear cuenta'}

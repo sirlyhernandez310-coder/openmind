@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Appointment, Availability
+from .models import Appointment, Availability, CallRoom
 
 
 @admin.register(Availability)
@@ -15,3 +15,9 @@ class AppointmentAdmin(admin.ModelAdmin):
     list_filter = ("status",)
     search_fields = ("patient__email", "psychologist__email")
     date_hierarchy = "start"
+
+
+@admin.register(CallRoom)
+class CallRoomAdmin(admin.ModelAdmin):
+    list_display = ("appointment", "psychologist_joined_at", "patient_joined_at", "started_at")
+    readonly_fields = ("offer", "answer")

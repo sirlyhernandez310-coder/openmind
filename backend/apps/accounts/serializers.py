@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_str
@@ -80,9 +81,21 @@ class RegisterSerializer(serializers.ModelSerializer):
         write_only=True, style={"input_type": "password"}, error_messages=FIELD_ERRORS
     )
 
+    accept_privacy = serializers.BooleanField(
+        write_only=True,
+        help_text="Debe ser true: acepta la política de tratamiento de datos personales (Ley 1581 de 2012)",
+    )
+
     class Meta:
         model = User
-        fields = ("email", "first_name", "last_name", "phone", "birth_date", "password", "password_confirm")
+        fields = (
+            "email", "first_name", "last_name", "phone", "birth_date", "password", "password_confirm", "accept_privacy",
+        )
+
+    def validate_accept_privacy(self, value):
+        if value is not True:
+            raise serializers.ValidationError("Debes aceptar la política de tratamiento de datos personales.")
+        return value
 
     def validate_email(self, value):
         value = value.strip().lower()
@@ -108,7 +121,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop("password_confirm")
-        return User.objects.create_user(role=User.Role.PACIENTE, **validated_data)
+        validated_data.pop("accept_privacy")
+        return User.objects.create_user(role=User.Role.PACIENTE, privacy_accepted_at=timezone.now(), **validated_data)
 
 
 # ---------------------------------------------------------- Inicio de sesión (OM3-10)

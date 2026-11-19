@@ -75,3 +75,30 @@ class Appointment(models.Model):
 
     def __str__(self):
         return f"{self.patient.email} con {self.psychologist.email} · {self.start:%Y-%m-%d %H:%M}"
+
+
+class CallRoom(models.Model):
+    """
+    OM3-20 Videollamada: sala de la sesión (una por cita).
+
+    El audio y el video viajan directo entre los dos navegadores (WebRTC).
+    Aquí solo se guarda la "señalización": la oferta del psicólogo y la respuesta del paciente,
+    que son los datos técnicos que cada navegador necesita para encontrar al otro.
+    """
+
+    appointment = models.OneToOneField(Appointment, on_delete=models.CASCADE, related_name="call_room", verbose_name="cita")
+    offer = models.TextField("oferta (psicólogo)", blank=True)
+    offer_at = models.DateTimeField(null=True, blank=True)
+    answer = models.TextField("respuesta (paciente)", blank=True)
+    answer_at = models.DateTimeField(null=True, blank=True)
+    psychologist_joined_at = models.DateTimeField("psicólogo conectado", null=True, blank=True)
+    patient_joined_at = models.DateTimeField("paciente conectado", null=True, blank=True)
+    started_at = models.DateTimeField("primera conexión", null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "sala de videollamada"
+        verbose_name_plural = "salas de videollamada"
+
+    def __str__(self):
+        return f"Videollamada de la cita {self.appointment_id}"

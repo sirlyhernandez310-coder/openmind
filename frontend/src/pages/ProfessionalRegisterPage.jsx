@@ -5,12 +5,14 @@ import Alert from '../components/Alert'
 import AuthLayout from '../components/AuthLayout'
 import FormField from '../components/FormField'
 import PasswordChecklist from '../components/PasswordChecklist'
+import PrivacyConsent, { PRIVACY_REQUIRED } from '../components/PrivacyConsent'
 import ProfessionalFields, { validateProfessional } from '../components/ProfessionalFields'
 import { REQUIRED, compact, validateEmail } from '../validation'
 
 const EMPTY = {
   first_name: '', last_name: '', email: '', phone: '', password: '', password_confirm: '',
   specialty: '', years_experience: '', license_number: '', university: '', experience: '', description: '',
+  accept_privacy: false,
 }
 
 export default function ProfessionalRegisterPage() {
@@ -41,6 +43,7 @@ export default function ProfessionalRegisterPage() {
         email: validateEmail(form.email),
         password: form.password ? (form.password.length < 8 ? 'Debe tener al menos 8 caracteres.' : null) : REQUIRED,
         password_confirm: !form.password_confirm ? REQUIRED : form.password_confirm !== form.password ? 'Las contraseñas no coinciden.' : null,
+        accept_privacy: form.accept_privacy ? null : PRIVACY_REQUIRED,
       }),
       ...validateProfessional(form),
     }
@@ -90,6 +93,11 @@ export default function ProfessionalRegisterPage() {
         <ProfessionalFields form={form} errors={errors} specialties={specialties} onChange={update} />
 
         <p className="tiny muted">Un administrador verificará tu tarjeta profesional antes de que puedas atender emergencias.</p>
+        <PrivacyConsent
+          checked={form.accept_privacy}
+          error={errors.accept_privacy}
+          onChange={(value) => { setForm((f) => ({ ...f, accept_privacy: value })); setErrors((e) => ({ ...e, accept_privacy: undefined })) }}
+        />
         <button type="submit" className="btn btn--primary btn--block" disabled={submitting}>
           {submitting ? 'Registrando…' : 'Crear mi perfil profesional'}
         </button>

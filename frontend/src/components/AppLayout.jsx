@@ -24,6 +24,7 @@ const NAV_BY_ROLE = {
   ADMINISTRADOR: [
     { to: '/admin', label: 'Usuarios', icon: 'users', end: true },
     { to: '/admin/profesionales', label: 'Profesionales', icon: 'shield' },
+    { to: '/admin/estadisticas', label: 'Estadísticas', icon: 'chart' },
   ],
 }
 

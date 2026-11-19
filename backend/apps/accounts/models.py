@@ -27,6 +27,8 @@ class User(AbstractUser):
     # así no se pierde en hostings con disco temporal como Render. Se sirve con una URL no adivinable.
     avatar = models.BinaryField("foto de perfil", null=True, blank=True, editable=False)
     avatar_key = models.UUIDField("clave de la foto", null=True, blank=True, editable=False)
+    # Ley 1581 de 2012: fecha en que aceptó la política de tratamiento de datos personales
+    privacy_accepted_at = models.DateTimeField("aceptó la política de datos", null=True, blank=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]

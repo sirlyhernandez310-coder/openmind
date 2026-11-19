@@ -21,6 +21,13 @@ const PATHS = {
   plus: <path d="M12 5v14M5 12h14" />,
   trash: <path d="M5 7h14M10 7V5h4v2M7 7l1 13h8l1-13" />,
   school: <><path d="M3 9l9-5 9 5-9 5z" /><path d="M7 11.5V16c3 2.5 7 2.5 10 0v-4.5" /></>,
+  video: <><rect x="3" y="6" width="13" height="12" rx="3" /><path d="M16 10.5l5-3v9l-5-3" /></>,
+  videoOff: <><path d="M16 10.5l5-3v9l-5-3M10 6h3a3 3 0 0 1 3 3v3M16 16a3 3 0 0 1-3 2H6a3 3 0 0 1-3-3V9a3 3 0 0 1 2-2.8" /><path d="M3 3l18 18" /></>,
+  mic: <><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" /></>,
+  micOff: <><path d="M15 10V6a3 3 0 0 0-5.8-1M9 9v2a3 3 0 0 0 4.8 2.4M5.5 11a6.5 6.5 0 0 0 10.6 5M18.5 11a6.5 6.5 0 0 1-.6 2.7M12 17.5V21" /><path d="M3 3l18 18" /></>,
+  hangup: <path d="M3 14.5c5-5 13-5 18 0l-2.5 2.5-3.5-1.5v-2.5a10 10 0 0 0-6 0v2.5L5.5 17z" />,
+  lock: <><rect x="5" y="10" width="14" height="11" rx="3" /><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14.5v2.5" /></>,
+  list: <path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" />,
 }
 
 export default function Icon({ name, size = 20, strokeWidth = 2 }) {
