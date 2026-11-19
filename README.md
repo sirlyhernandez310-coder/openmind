@@ -70,7 +70,7 @@ se imprimen en la Terminal 1 (la del backend). Busca la línea que empieza con `
 
 ```powershell
 cd backend
-python manage.py test                          # 134 pruebas (Sprints 1, 2 y 3)
+python manage.py test                          # 163 pruebas (Sprints 1 a 4)
 coverage run manage.py test; coverage report   # cobertura (99 %)
 ```
 
@@ -217,6 +217,59 @@ Una restricción única en la base de datos impide que dos personas reserven el 
 
 ---
 
+## ✅ Sprint 4 · Gestión y seguridad
+
+### OM3-20 · Videollamada
+
+El audio y el video viajan **directo entre los dos navegadores** con **WebRTC** (cifrado, sin grabar). La API solo hace la *señalización*: guarda la oferta del psicólogo y la respuesta del paciente (`apps/appointments/call.py`, modelo `CallRoom`).
+
+| Criterio | Cómo se cumple | Prueba |
+|---|---|---|
+| CA1 Acceder desde una sesión programada | Botón **Entrar a la videollamada** en *Mis sesiones* y en la *Agenda* (desde 15 min antes) | `test_ca1_ca4_accede_desde_su_sesion…` |
+| CA2 Establecer la conexión | `POST /api/appointments/{id}/call/` con `join`, `offer`, `answer` y `leave` | `test_ca2_ca3_se_establece_la_conexion…` |
+| CA3 Audio y video | Cámara y micrófono con botones para silenciar, apagar cámara y colgar | prueba en navegador (2 navegadores conectados) |
+| CA4 Asociada a la sesión | Una sala por cita; solo entran el paciente y el psicólogo de esa cita | `test_ca4_solo_los_participantes…` |
+
+### OM3-22 · Gestionar perfil profesional
+
+| Criterio | Cómo se cumple | Prueba |
+|---|---|---|
+| CA1 Consultar su información | *Perfil profesional* muestra datos personales y profesionales | `test_ca1_consulta_su_informacion` |
+| CA2 Modificar los datos permitidos | Nombres, apellidos, teléfono, especialidad, experiencia, universidad y descripción. **No** se cambian el correo ni la tarjeta profesional ya verificada | `test_ca2_…` (2 pruebas) |
+| CA3 Los cambios se guardan | `PATCH /api/professionals/me/` con validaciones | `test_validaciones` |
+| CA4 Se muestra en su perfil | Se actualiza su perfil, la barra superior y la tarjeta **Así te ven los pacientes** | `test_ca4_la_informacion_actualizada…` |
+
+### OM3-24 · Gestionar usuarios
+
+| Criterio | Cómo se cumple | Prueba |
+|---|---|---|
+| CA1 Consultar usuarios | *Usuarios* con buscador y filtros por rol y estado (`GET /api/admin/users/`) | `test_ca1_…` |
+| CA2 Información básica | Foto, nombre, correo, rol, estado, correo confirmado, registro y último ingreso | `test_ca1_ca2_consulta_usuarios…` |
+| CA3 Gestionar el estado según permisos | Activar o desactivar pacientes y psicólogos (con motivo). No se puede tocar la propia cuenta ni la de otro administrador. Una cuenta desactivada no puede iniciar sesión | `test_ca3_…` (2 pruebas) |
+| CA4 Acciones registradas | Modelo `AdminActionLog` (quién, qué, a quién, motivo y fecha), de solo lectura. También registra la verificación de psicólogos | `test_ca4_…` (2 pruebas) |
+
+### OM3-25 · Estadísticas
+
+| Criterio | Cómo se cumple | Prueba |
+|---|---|---|
+| CA1 Acceder al módulo | Menú *Estadísticas* del administrador | `test_ca1_ca2_el_administrador_accede…` |
+| CA2 Información estadística | Usuarios, psicólogos verificados, evaluaciones por nivel, citas por estado, chats y gráficas de los últimos 6 meses | ídem |
+| CA3 Corresponde a lo registrado | Se calcula en el momento con consultas a la base de datos (`apps/administration/stats.py`) | `test_ca3_los_datos_corresponden…` |
+| CA4 Solo el administrador | `GET /api/admin/stats/` responde 403 a otros roles y 401 sin sesión | `test_ca4_solo_el_administrador` |
+
+### OM3-26 · Protección de información (Ley 1581 de 2012)
+
+| Criterio | Cómo se cumple | Prueba |
+|---|---|---|
+| CA1 Cada usuario ve solo lo suyo | Las consultas siempre filtran por el usuario; lo ajeno responde 404 | `test_ca1_…` (2 pruebas) |
+| CA2 Nada público sin autorización | Todo exige sesión. El directorio no muestra correo, teléfono ni tarjeta. Política de privacidad en `/privacidad` y casilla obligatoria de autorización al registrarse (se guarda la fecha) | `test_ca2_…`, `test_el_registro_exige_aceptar…` |
+| CA3 Permisos por rol | `role_permission(...)` en cada vista; matriz rol × función probada | `test_ca3_ca4_cada_rol_solo_usa_sus_funciones` |
+| CA4 Control de acceso por tipo de usuario | Rutas protegidas en el frontend y el backend; cuentas desactivadas pierden el acceso aunque tengan token | `test_ca4_una_cuenta_desactivada…` |
+
+Además: contraseñas cifradas (PBKDF2 + SHA-256), JWT con vencimiento, encabezados de seguridad (`X-Frame-Options: DENY`, `nosniff`).
+
+---
+
 ## 🎨 Identidad visual (Sprint 2.5)
 
 - **Logo:** isotipo de medio cerebro + medio corazón unidos por una línea, con "Open Mind" en **Kaushan Script**.
@@ -272,6 +325,12 @@ Las fotos se recortan y comprimen y se guardan **dentro de la base de datos**, p
 | GET/POST | `/api/appointments/` | Paciente (POST) · Paciente o Psicólogo | Mis sesiones (`?scope=`) · reservar cita |
 | GET  | `/api/appointments/{id}/` | Participantes | Detalle de una cita |
 | GET/PUT | `/api/appointments/availability/` | Psicólogo | Mi horario semanal |
+| GET/POST | `/api/appointments/{id}/call/` | Participantes | Videollamada: estado y señalización |
+| GET/PATCH | `/api/professionals/me/` | Psicólogo | Gestionar mi perfil profesional |
+| GET | `/api/admin/users/` | Administrador | Usuarios (`?q=`, `?role=`, `?status=`) |
+| POST | `/api/admin/users/{id}/status/` | Administrador | Activar o desactivar una cuenta (`reason`) |
+| GET | `/api/admin/logs/` | Administrador | Registro de acciones administrativas |
+| GET | `/api/admin/stats/` | Administrador | Estadísticas de la plataforma |
 
 Documentación interactiva: `/api/docs/` (Swagger) y `/api/redoc/`.
 
@@ -339,7 +398,9 @@ Un proyecto de Railway con 3 servicios, todos desde este repositorio:
 | Servicio | Root Directory | Variables |
 |---|---|---|
 | **Postgres** | (plantilla de base de datos) | — |
-| **backend** | `/backend` | `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=False`, `SEED_DEMO_DATA=true`, `EMAIL_VERIFICATION_REQUIRED=False`, `CORS_ALLOWED_ORIGINS` y `FRONTEND_URL` (URL del frontend) |
+| **backend** | `/backend` | `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=False`, `SEED_DEMO_DATA=true`, `CORS_ALLOWED_ORIGINS` y `FRONTEND_URL` (URL del frontend), `VIDEOCALL_EARLY_MINUTES` (opcional) y el correo: `EMAIL_BACKEND=apps.accounts.email_backends.BrevoEmailBackend`, `BREVO_API_KEY`, `DEFAULT_FROM_EMAIL` |
 | **frontend** | `/frontend` | `VITE_API_URL=https://<dominio-del-backend>/api` |
 
-`railway.json` en cada carpeta indica que se construye con el `Dockerfile`. `EMAIL_VERIFICATION_REQUIRED=False` activa las cuentas sin correo mientras no haya un servidor de correo real.
+`railway.json` en cada carpeta indica que se construye con el `Dockerfile`. **Correo real:** Railway bloquea SMTP en los planes de prueba, por eso se envía con la **API HTTP de Brevo** (300 correos al día gratis). Si aún no hay correo configurado, `EMAIL_VERIFICATION_REQUIRED=False` activa las cuentas sin verificar el correo.
+
+**Videollamada:** usa servidores STUN públicos de Google. En redes muy restrictivas se puede agregar un servidor TURN con `VIDEOCALL_TURN_URLS`, `VIDEOCALL_TURN_USERNAME` y `VIDEOCALL_TURN_CREDENTIAL`.

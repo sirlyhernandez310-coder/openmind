@@ -9,6 +9,7 @@ router = DefaultRouter()
 router.register("", views.AppointmentViewSet, basename="appointment")
 
 urlpatterns = [
+    path("<int:pk>/call/", views.CallView.as_view(), name="call"),
     path("availability/", views.MyAvailabilityView.as_view(), name="my-availability"),
     path("psychologists/<int:psychologist_id>/slots/", views.AvailableSlotsView.as_view(), name="slots"),
     *router.urls,

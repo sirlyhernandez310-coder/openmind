@@ -62,7 +62,7 @@
         <circle cx="38" cy="68" r="5" fill="#F5B39A" opacity=".6"/><circle cx="84" cy="68" r="5" fill="#F5B39A" opacity=".6"/>
       </svg>
       <div>
-        <span class="tag">API en línea · v3.0 · Sprints 1, 2 y 3</span>
+        <span class="tag">API en línea · v4.0 · Sprints 1 a 4</span>
         <h1>OpenMind API</h1>
         <p class="lead">Backend REST de la plataforma de psicología y gestión emocional. Autenticación con JWT, roles de paciente, psicólogo y administrador, evaluación emocional, historial y chat de emergencia.</p>
       </div>
@@ -143,6 +143,19 @@
         <li><span class="m post">POST</span><div><code>/api/appointments/</code><span class="lock">🔒 Paciente</span><span class="desc">Reservar una cita en un horario libre</span></div></li>
         <li><span class="m get">GET</span><div><code>/api/appointments/</code><span class="lock">🔒 Paciente / Psicólogo</span><span class="desc">Mis sesiones (?scope=upcoming|past|all)</span></div></li>
         <li><span class="m get">GET</span><div><code>/api/appointments/availability/</code><span class="lock">🔒 Psicólogo</span><span class="desc">Ver y reemplazar (PUT) el horario semanal de atención</span></div></li>
+      </ul>
+    </section>
+
+    <section class="group">
+      <h2>Gestión y seguridad</h2>
+      <small>Historias OM3-20, OM3-22, OM3-24, OM3-25 y OM3-26</small>
+      <ul>
+        <li><span class="m get">GET</span><div><code>/api/appointments/{id}/call/</code><span class="lock">🔒 Participantes</span><span class="desc">Videollamada: estado de la sala; POST para la señalización (join, offer, answer, leave)</span></div></li>
+        <li><span class="m get">GET</span><div><code>/api/professionals/me/</code><span class="lock">🔒 Psicólogo</span><span class="desc">Gestionar perfil profesional (PATCH para actualizar)</span></div></li>
+        <li><span class="m get">GET</span><div><code>/api/admin/users/</code><span class="lock">🔒 Administrador</span><span class="desc">Usuarios registrados con búsqueda y filtros</span></div></li>
+        <li><span class="m post">POST</span><div><code>/api/admin/users/{id}/status/</code><span class="lock">🔒 Administrador</span><span class="desc">Activar o desactivar una cuenta (queda registrado)</span></div></li>
+        <li><span class="m get">GET</span><div><code>/api/admin/logs/</code><span class="lock">🔒 Administrador</span><span class="desc">Registro de acciones administrativas</span></div></li>
+        <li><span class="m get">GET</span><div><code>/api/admin/stats/</code><span class="lock">🔒 Administrador</span><span class="desc">Estadísticas de la plataforma</span></div></li>
       </ul>
     </section>
 

@@ -6,7 +6,6 @@ import RoleRedirect from './components/RoleRedirect'
 import Splash from './components/Splash'
 import { ROLES } from './constants/roles'
 import { useAuth } from './context/auth-context'
-import AdminHomePage from './pages/admin/AdminHomePage'
 import ProfessionalsPage from './pages/admin/ProfessionalsPage'
 import CheckEmailPage from './pages/CheckEmailPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
@@ -28,6 +27,10 @@ import PsychologistHomePage from './pages/psicologo/PsychologistHomePage'
 import RegisterPage from './pages/RegisterPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
+import VideoCallPage from './pages/VideoCallPage'
+import PrivacyPage from './pages/PrivacyPage'
+import StatsPage from './pages/admin/StatsPage'
+import UsersPage from './pages/admin/UsersPage'
 
 const SPLASH_KEY = 'openmind.splash'
 const SPLASH_MS = 2600
@@ -79,6 +82,7 @@ function App() {
       <Route path="/verificar-correo" element={<VerifyEmailPage />} />
       <Route path="/recuperar-contrasena" element={<ForgotPasswordPage />} />
       <Route path="/restablecer-contrasena" element={<ResetPasswordPage />} />
+      <Route path="/privacidad" element={<PrivacyPage />} />
 
       {/* Rutas protegidas: cada rol ve su propia interfaz */}
       <Route element={<ProtectedRoute />}>
@@ -100,8 +104,12 @@ function App() {
             <Route path="/psicologo/emergencias" element={<EmergencyQueuePage />} />
             <Route path="/psicologo/perfil" element={<ProfessionalProfilePage />} />
           </Route>
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.PACIENTE, ROLES.PSICOLOGO]} />}>
+            <Route path="/sesion/:id/videollamada" element={<VideoCallPage />} />
+          </Route>
           <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR]} />}>
-            <Route path="/admin" element={<AdminHomePage />} />
+            <Route path="/admin" element={<UsersPage />} />
+            <Route path="/admin/estadisticas" element={<StatsPage />} />
             <Route path="/admin/profesionales" element={<ProfessionalsPage />} />
           </Route>
         </Route>

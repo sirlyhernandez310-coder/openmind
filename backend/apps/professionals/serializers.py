@@ -72,9 +72,10 @@ class ProfessionalRegisterSerializer(ProfileFieldsMixin, RegisterSerializer):
     def create(self, validated_data):
         profile_data = {field: validated_data.pop(field) for field in PROFILE_FIELDS if field in validated_data}
         validated_data.pop("password_confirm")
+        validated_data.pop("accept_privacy")
         from apps.accounts.models import User
 
-        user = User.objects.create_user(role=User.Role.PSICOLOGO, **validated_data)
+        user = User.objects.create_user(role=User.Role.PSICOLOGO, privacy_accepted_at=timezone.now(), **validated_data)
         PsychologistProfile.objects.create(user=user, **profile_data)
         return user
 
@@ -87,6 +88,48 @@ class ProfileSerializer(ProfileFieldsMixin, serializers.ModelSerializer):
         model = PsychologistProfile
         fields = ("id", "user", *PROFILE_FIELDS, "specialty_display", "is_verified", "verified_at", "created_at")
         read_only_fields = ("is_verified", "verified_at", "created_at")
+
+
+class MyProfileSerializer(ProfileSerializer):
+    """
+    OM3-22 Gestionar perfil profesional.
+    Datos permitidos: nombres, apellidos, teléfono y los datos profesionales.
+    No se pueden cambiar aquí: el correo (es el usuario de acceso) ni la tarjeta profesional
+    (la verificó el administrador; si cambiara, la verificación dejaría de ser válida).
+    """
+
+    first_name = serializers.CharField(source="user.first_name", max_length=150, required=False, error_messages=FIELD_ERRORS)
+    last_name = serializers.CharField(source="user.last_name", max_length=150, required=False, error_messages=FIELD_ERRORS)
+    phone = serializers.CharField(source="user.phone", max_length=20, required=False, allow_blank=True)
+    license_number = serializers.CharField(read_only=True)
+
+    class Meta(ProfileSerializer.Meta):
+        fields = (*ProfileSerializer.Meta.fields, "first_name", "last_name", "phone", "updated_at")
+        read_only_fields = (*ProfileSerializer.Meta.read_only_fields, "license_number", "updated_at")
+
+    def validate_first_name(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError("Este campo es obligatorio.")
+        return value
+
+    def validate_last_name(self, value):
+        return self.validate_first_name(value)
+
+    def validate_phone(self, value):
+        value = value.strip()
+        if value and not re.fullmatch(r"\+?[0-9 ]{7,20}", value):
+            raise serializers.ValidationError("Ingresa un teléfono válido (solo números).")
+        return value
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        user_data = validated_data.pop("user", {})
+        if user_data:
+            for field, value in user_data.items():
+                setattr(instance.user, field, value)
+            instance.user.save(update_fields=list(user_data))
+        return super().update(instance, validated_data)
 
 
 class VerifySerializer(serializers.Serializer):

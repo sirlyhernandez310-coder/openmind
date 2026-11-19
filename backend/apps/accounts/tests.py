@@ -51,6 +51,7 @@ class RegisterTests(BaseTestCase):
             "birth_date": "2000-05-14",
             "password": PASSWORD,
             "password_confirm": PASSWORD,
+            "accept_privacy": True,
         }
         data.update(overrides)
         return data
@@ -506,7 +507,8 @@ class RegistroSinVerificacionTests(APITestCase):
     @override_settings(EMAIL_VERIFICATION_REQUIRED=False)
     def test_la_cuenta_queda_activa_y_puede_iniciar_sesion(self):
         data = {"email": "nuevo@x.com", "first_name": "Nueva", "last_name": "Persona",
-                "password": "ClaveSegura#2026", "password_confirm": "ClaveSegura#2026"}
+                "password": "ClaveSegura#2026", "password_confirm": "ClaveSegura#2026",
+                "accept_privacy": True}
         response = self.client.post(reverse("accounts:register"), data, format="json")
         self.assertEqual(response.status_code, 201)
         self.assertTrue(response.data["email_verified"])

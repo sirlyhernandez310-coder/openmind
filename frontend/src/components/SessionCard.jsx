@@ -1,4 +1,5 @@
-import { dayNumber, formatLongDay, formatMonthShort, formatTimeRange, friendlyDay } from '../format'
+import { Link } from 'react-router-dom'
+import { dayNumber, formatLongDay, formatMonthShort, formatTime, formatTimeRange, friendlyDay } from '../format'
 import Avatar from './Avatar'
 import Icon from './Icon'
 
@@ -28,6 +29,28 @@ export default function SessionCard({ appointment, viewer = 'PACIENTE' }) {
         </div>
       </div>
       <span className={`level-pill level-pill--${STATUS_TONE[appointment.status] ?? 'lilac'}`}>{appointment.status_display}</span>
+      <CallAccess appointment={appointment} />
     </article>
+  )
+}
+
+// OM3-20 CA1: la videollamada se abre desde la sesión programada
+function CallAccess({ appointment }) {
+  if (appointment.status !== 'PROGRAMADA' || !appointment.call_opens_at) return null
+  const now = Date.now()
+  const opens = Date.parse(appointment.call_opens_at)
+  if (now > Date.parse(appointment.end)) return null
+  if (now >= opens) {
+    return (
+      <Link to={`/sesion/${appointment.id}/videollamada`} className="btn btn--sun btn--sm session-call">
+        <Icon name="video" size={18} /> Entrar a la videollamada
+      </Link>
+    )
+  }
+  return (
+    <span className="session-call session-call--soon">
+      <Icon name="video" size={16} /> Videollamada disponible desde las {formatTime(appointment.call_opens_at)}
+      {friendlyDay(appointment.call_opens_at) !== friendlyDay(appointment.start) && ` del ${formatLongDay(appointment.call_opens_at)}`}
+    </span>
   )
 }

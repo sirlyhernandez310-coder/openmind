@@ -26,6 +26,7 @@ class ProfessionalTestCase(APITestCase):
             "phone": "3105551234",
             "password": PASSWORD,
             "password_confirm": PASSWORD,
+            "accept_privacy": True,
             "specialty": "CLINICA",
             "years_experience": 6,
             "experience": "Hospital San Vicente, consulta privada.",
@@ -174,3 +175,56 @@ class DirectorioTests(ProfessionalTestCase):
         self.assertEqual(self.client.get(reverse("professionals:directory"), {"specialty": "familia"}).data, [])
         self.client.force_authenticate(None)
         self.assertEqual(self.client.get(reverse("professionals:directory")).status_code, 401)
+
+
+class GestionarPerfilProfesionalTests(APITestCase):
+    """OM3-22 Gestionar perfil profesional."""
+
+    def setUp(self):
+        self.psychologist = User.objects.create_user(
+            email="psi@x.com", password=PASSWORD, first_name="Laura", last_name="Mesa", role=User.Role.PSICOLOGO,
+        )
+        PsychologistProfile.objects.create(
+            user=self.psychologist, specialty="CLINICA", years_experience=4, license_number="TP-1111",
+            description="Acompaño procesos de ansiedad y estrés en adultos jóvenes.", is_verified=True,
+        )
+        self.client.force_authenticate(self.psychologist)
+        self.url = reverse("professionals:me")
+
+    def test_ca1_consulta_su_informacion(self):
+        data = self.client.get(self.url).data
+        for field in ("first_name", "last_name", "phone", "specialty", "years_experience", "description", "license_number"):
+            self.assertIn(field, data)
+        self.assertEqual(data["user"]["email"], "psi@x.com")
+
+    def test_ca2_ca3_modifica_los_datos_permitidos_y_se_guardan(self):
+        changes = {"first_name": " Laura Sofía ", "phone": "300 123 4567", "years_experience": 5,
+                   "university": "Universidad de Medellín", "description": "Nueva descripción de mi enfoque terapéutico."}
+        response = self.client.patch(self.url, changes, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.psychologist.refresh_from_db()
+        profile = self.psychologist.psychologist_profile
+        self.assertEqual(self.psychologist.first_name, "Laura Sofía")
+        self.assertEqual(self.psychologist.phone, "300 123 4567")
+        self.assertEqual((profile.years_experience, profile.university), (5, "Universidad de Medellín"))
+
+    def test_ca2_datos_no_permitidos_no_cambian(self):
+        self.client.patch(self.url, {"license_number": "TP-9999", "is_verified": False}, format="json")
+        profile = PsychologistProfile.objects.get()
+        self.assertEqual(profile.license_number, "TP-1111")
+        self.assertTrue(profile.is_verified)
+
+    def test_validaciones(self):
+        response = self.client.patch(self.url, {"first_name": "  ", "phone": "abc", "years_experience": -1, "description": "corta"}, format="json")
+        self.assertEqual(response.status_code, 400)
+        for field in ("first_name", "phone", "years_experience", "description"):
+            self.assertIn(field, response.data)
+        self.assertIn("last_name", self.client.patch(self.url, {"last_name": ""}, format="json").data)
+
+    def test_ca4_la_informacion_actualizada_se_muestra_en_su_perfil(self):
+        self.client.patch(self.url, {"last_name": "Mesa Ríos", "specialty": "SALUD"}, format="json")
+        mine = self.client.get(self.url).data
+        self.assertEqual(mine["user"]["full_name"], "Laura Mesa Ríos")
+        public = self.client.get(reverse("professionals:directory-detail", args=[self.psychologist.pk])).data
+        self.assertEqual(public["full_name"], "Laura Mesa Ríos")
+        self.assertEqual(public["specialty"], "SALUD")
